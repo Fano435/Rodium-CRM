@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StatutContact {
+  PROSPECT
+  CONTACTE
+  QUALIFIE
+  CLIENT
+  PERDU
+}
+
+model Contact {
+  id         Int      @id @default(autoincrement())
+  nom        String
+  entreprise String?
+  telephone  String
+  score      Int      @default(0)
+  statut     StatutContact  @default(PROSPECT)
+  createdAt  DateTime @default(now())
+
+  @@map("contacts")
+}
