@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ContactService } from './modules/contacts/contacts.service';
 import { ContactController } from './modules/contacts/contacts.controller';
-import { PrismaModule } from './modules/prisma/prisma.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [PrismaModule],

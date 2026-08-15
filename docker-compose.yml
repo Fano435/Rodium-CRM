@@ -12,7 +12,7 @@ services:
       - pgdata:/var/lib/postgresql
 
   api:
-    build: ./backend
+    build: ./api
     container_name: api_crm
     restart: unless-stopped
     ports:
@@ -21,20 +21,21 @@ services:
       DATABASE_URL: ${DATABASE_URL}
 
     volumes:
-      - ./backend:/app
+      - ./api:/app
       - /app/node_modules
 
-  # web:
-  #   build: ./frontend
-  #   container_name: web_crm
-  #   restart: unless-stopped
-  #   ports:
-  #     - "5173:5173"
-  #   depends_on:
-  #     - api
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
+  web:
+    build: ./web
+    container_name: web_crm
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+      - ./api/generated:/app/src/generated:ro
 
 volumes:
   pgdata:
