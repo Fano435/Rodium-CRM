@@ -1,0 +1,472 @@
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+body {
+  overflow: hidden;
+}
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --paper: #f7f6f1;
+  --surface: #ffffff;
+  --ink: #1e2a22;
+  --ink-soft: #55594f;
+  --ink-faint: #8b8a7c;
+  --line: #ddd9cc;
+  --line-strong: #c7c2b0;
+  --accent: #2f5233;
+  --accent-soft: #e4ece1;
+  --danger: #a3372b;
+  --danger-soft: #f6e4e1;
+  --radius: 6px;
+}
+
+.cv-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 20px 24px;
+  gap: 14px;
+}
+
+/* --- Boutons --------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover {
+  border-color: var(--ink-faint);
+}
+.btn:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+.btn-primary:hover {
+  background: #264429;
+}
+
+/* --- Toolbar ----------------------------------------------------------- */
+.ctb-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- Table (grille de divs, virtualisee) -------------------------------- */
+[role="table"] {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.table-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.ct-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 40px; /* = ROW_HEIGHT, pour que le "top" de la ligne brouillon tombe juste */
+  display: grid;
+  border-bottom: 2px solid var(--ink);
+  background: var(--paper);
+}
+.ct-header-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 0 8px;
+  min-width: 0;
+}
+.ct-sort-btn {
+  background: none;
+  border: none;
+  padding: 10px 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ct-sort-btn:hover {
+  color: var(--ink);
+}
+.ct-row-draft-sticky {
+  position: sticky;
+  top: 40px;
+  z-index: 2;
+  height: 40px;
+}
+.ct-row-virtual {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+}
+
+/* --- Filtre par colonne ------------------------------------------------ */
+.chf-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.chf-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  border-radius: 4px;
+}
+.chf-trigger:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+.chf-trigger.active {
+  color: var(--accent);
+}
+.chf-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  margin-top: 4px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+.chf-input {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  font-size: 12.5px;
+}
+.chf-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* --- Lignes -------------------------------------------------------------- */
+.ct-row {
+  display: grid;
+  border-bottom: 1px solid var(--line);
+  align-items: center;
+  font-size: 13.5px;
+  height: 40px;
+}
+.ct-row:hover {
+  background: #fbfaf6;
+}
+.ct-row-draft {
+  background: var(--accent-soft);
+}
+
+.ct-row [role="cell"] {
+  padding: 0 8px;
+  height: 100%;
+  overflow: hidden;
+}
+.ct-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 0 8px !important;
+}
+
+.ct-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.ct-icon-btn:hover {
+  border-color: var(--ink-faint);
+  color: var(--ink);
+}
+.ct-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--accent);
+}
+.ct-icon-btn-danger:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+/* --- Cellule editable (EditableCell) -------------------------------------- */
+.ec-display {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ec-display:hover {
+  background: var(--accent-soft);
+}
+.ec-display:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.ec-empty {
+  color: var(--ink-faint);
+}
+
+.ec-wrap {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.ec-input {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--accent-soft);
+  font: inherit;
+  color: inherit;
+}
+.ec-input:focus {
+  outline: none;
+}
+.ec-input.has-error {
+  color: var(--danger);
+  background: none;
+}
+
+/* --- Import en masse ------------------------------------------------------ */
+.bip-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--surface);
+  max-width: 480px;
+}
+.bip-hint {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin: 0 0 8px;
+}
+.bip-hint code {
+  font-family: ui-monospace, monospace;
+  font-size: 11.5px;
+  background: var(--paper);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.bip-textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-family: ui-monospace, monospace;
+  font-size: 12.5px;
+  resize: vertical;
+}
+.bip-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.bip-error {
+  font-size: 12.5px;
+  color: var(--danger);
+  background: var(--danger-soft);
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin: 8px 0;
+}
+.bip-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* --- Poignee de drag sur les en-tetes de colonnes dynamiques ------------ */
+.ct-header-cell-draggable {
+  cursor: grab;
+  touch-action: none;
+}
+.ct-header-cell-draggable:active {
+  cursor: grabbing;
+}
+
+.ct-icon-btn-confirm {
+  color: var(--surface);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.ct-icon-btn-confirm:hover {
+  background: #264429;
+}
+
+/* --- Menu de gestion des colonnes ---------------------------------------- */
+.cmm-wrap {
+  position: relative;
+}
+.cmm-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  margin-top: 4px;
+  padding: 10px;
+  width: 320px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+.cmm-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cmm-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+}
+.cmm-item-label {
+  flex: 1;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cmm-item-type {
+  font-size: 11px;
+  color: var(--ink-faint);
+  background: var(--paper);
+  padding: 2px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.cmm-rename-input {
+  flex: 1;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-size: 13px;
+}
+.cmm-rename-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.cmm-empty {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  padding: 6px 2px;
+}
+
+.cmm-new {
+  display: flex;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.cmm-new .ct-icon-btn {
+  width: 30px;
+  height: 30px;
+}
+.cmm-new-input {
+  flex: 1;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  font-size: 13px;
+}
+.cmm-new-select {
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  font-size: 12.5px;
+}
+.cmm-new-input:focus,
+.cmm-new-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}

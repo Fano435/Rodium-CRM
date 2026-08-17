@@ -1,14 +1,13 @@
-import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ContactsView } from "./features/contacts/ContactsView";
+
+const queryClient = new QueryClient();
 
 function App() {
-
   return (
-    <>
-      <section id="center"></section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <QueryClientProvider client={queryClient}>
+      <ContactsView />
+    </QueryClientProvider>
   );
 }
 
