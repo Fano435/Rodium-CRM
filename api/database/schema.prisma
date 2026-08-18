@@ -16,14 +16,31 @@ enum StatutContact {
   PERDU
 }
 
+enum ColumnType {
+  TEXT
+  NUMBER
+  DATE
+}
+
+model ContactColumn {
+  id        Int        @id @default(autoincrement())
+  label     String
+  type      ColumnType
+  order     Int
+  createdAt DateTime   @default(now())
+
+  @@map("contact_columns")
+}
+
 model Contact {
-  id         Int      @id @default(autoincrement())
-  nom        String
-  entreprise String?
-  telephone  String
-  score      Int      @default(0)
-  statut     StatutContact  @default(PROSPECT)
-  createdAt  DateTime @default(now())
+  id           Int            @id @default(autoincrement())
+  nom          String
+  entreprise   String?
+  telephone    String
+  score        Int            @default(0)
+  statut       StatutContact  @default(PROSPECT)
+  customFields Json           @default("{}")
+  createdAt    DateTime       @default(now())
 
   @@map("contacts")
 }

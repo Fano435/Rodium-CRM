@@ -42,9 +42,6 @@ export function EditableCell(props: EditableCellProps) {
   const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
 
-  // Resynchronise l'affichage si la donnee sous-jacente change (ex: apres
-  // invalidation React Query suite a la sauvegarde d'une AUTRE cellule),
-  // mais seulement quand on n'est pas en train d'editer celle-ci.
   useEffect(() => {
     if (!isEditing) setDraft(toDisplayValue(props));
   }, [props.value]);

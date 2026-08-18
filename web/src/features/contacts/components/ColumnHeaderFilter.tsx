@@ -1,4 +1,3 @@
-// src/features/contacts/components/ColumnHeaderFilter.tsx
 import { useEffect, useRef, useState } from "react";
 import { Filter } from "lucide-react";
 

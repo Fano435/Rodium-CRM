@@ -7,36 +7,27 @@ import { Trash2, X } from "lucide-react";
 import { StatutContact, ColumnType } from "@generated/prisma/enums";
 import { EditableCell } from "./EditableCell";
 import { ColumnHeaderFilter } from "./ColumnHeaderFilter";
-import type { Contact } from "../../../services/contacts.api";
+import type { Contact, UpdateContactPayload } from "../../../services/contacts.api";
 import type { ContactColumn } from "../../../services/contactColumns.api";
-
-export type FixedFieldKey = "nom" | "entreprise" | "telephone" | "score" | "statut";
-export type FieldRef = { kind: "fixed"; key: FixedFieldKey } | { kind: "custom"; columnId: number };
-export type SaveTarget = { type: "draft" } | { type: "existing"; id: number };
-export type SortKey = FixedFieldKey | `custom:${number}`;
-export type FilterKey = SortKey;
-
-type DraftContact = {
-  nom?: string;
-  entreprise?: string | null;
-  telephone?: string;
-  score?: number | null;
-  statut?: StatutContact;
-  customFields?: Record<string, string | number | null>;
-};
+import {
+  type FixedFieldKey,
+  type ColumnKey,
+  type SaveTarget,
+  customColumnKey,
+} from "../types";
 
 type ContactsTableProps = {
   contacts: Contact[];
-  columns: ContactColumn[]; // deja triees par `order`
-  sortKey: SortKey;
+  columns: ContactColumn[];
+  sortKey: ColumnKey;
   sortOrder: "asc" | "desc";
-  onSort: (key: SortKey) => void;
+  onSort: (key: ColumnKey) => void;
   filters: Record<string, string>;
-  onFilterChange: (key: FilterKey, value: string) => void;
-  draft: DraftContact | null;
-  draftSaving?: boolean;
+  onFilterChange: (key: ColumnKey, value: string) => void;
+  draft: UpdateContactPayload | null;
+  draftSaving: boolean;
   onCancelDraft: () => void;
-  onSaveField: (target: SaveTarget, field: FieldRef, value: string | number | null) => Promise<void>;
+  onSaveField: (target: SaveTarget, field: ColumnKey, value: string | number | null) => Promise<void>;
   onDelete: (id: number) => void;
   onReorderColumns: (orderedIds: number[]) => void;
 };
@@ -44,14 +35,17 @@ type ContactsTableProps = {
 const MIN_COLUMN_WIDTH = 140;
 const ROW_HEIGHT = 40;
 const ACTIONS_WIDTH = 56;
-
-const FIXED_COLUMNS: { key: FixedFieldKey; label: string }[] = [
-  { key: "nom", label: "Nom" },
-  { key: "entreprise", label: "Entreprise" },
-  { key: "telephone", label: "Telephone" },
-  { key: "score", label: "Score" },
-  { key: "statut", label: "Statut" },
-];
+const FIXED_COLUMN_LABELS: Record<FixedFieldKey, string> = {
+  nom: "Nom",
+  entreprise: "Entreprise",
+  telephone: "Telephone",
+  score: "Score",
+  statut: "Statut",
+};
+const FIXED_COLUMNS = (Object.keys(FIXED_COLUMN_LABELS) as FixedFieldKey[]).map((key) => ({
+  key,
+  label: FIXED_COLUMN_LABELS[key],
+}));
 
 function customValue(customFields: Record<string, string | number | null> | undefined, columnId: number) {
   return customFields?.[String(columnId)] ?? null;
@@ -138,16 +132,19 @@ export function ContactsTable({
     onReorderColumns(arrayMove(columns, oldIndex, newIndex).map((c) => c.id));
   }
 
-  function renderFixedCell(target: SaveTarget, source: DraftContact | Contact, key: FixedFieldKey, disabled?: boolean) {
-    const field: FieldRef = { kind: "fixed", key };
-
+  function renderFixedCell(
+    target: SaveTarget,
+    source: UpdateContactPayload | Contact,
+    key: FixedFieldKey,
+    disabled: boolean,
+  ) {
     if (key === "statut") {
       return (
         <EditableCell
           kind="enum"
           value={source.statut ?? StatutContact.PROSPECT}
           options={Object.values(StatutContact)}
-          onSave={(v) => onSaveField(target, field, v)}
+          onSave={(v) => onSaveField(target, key, v)}
           disabled={disabled}
         />
       );
@@ -157,7 +154,7 @@ export function ContactsTable({
         <EditableCell
           kind="number"
           value={source.score ?? null}
-          onSave={(v) => onSaveField(target, field, v)}
+          onSave={(v) => onSaveField(target, key, v)}
           disabled={disabled}
         />
       );
@@ -166,7 +163,7 @@ export function ContactsTable({
       <EditableCell
         kind="text"
         value={(source[key] as string | null | undefined) ?? ""}
-        onSave={(v) => onSaveField(target, field, v)}
+        onSave={(v) => onSaveField(target, key, v)}
         disabled={disabled}
       />
     );
@@ -174,11 +171,11 @@ export function ContactsTable({
 
   function renderCustomCell(
     target: SaveTarget,
-    source: DraftContact | Contact,
+    source: UpdateContactPayload | Contact,
     column: ContactColumn,
-    disabled?: boolean,
+    disabled: boolean,
   ) {
-    const field: FieldRef = { kind: "custom", columnId: column.id };
+    const field = customColumnKey(column.id);
     const value = customValue(source.customFields, column.id);
 
     if (column.type === ColumnType.NUMBER) {
@@ -211,6 +208,24 @@ export function ContactsTable({
     );
   }
 
+  function renderRow(target: SaveTarget, source: UpdateContactPayload | Contact, disabled = false) {
+    return (
+      <>
+        {FIXED_COLUMNS.map((col) => (
+          <div key={col.key} role="cell">
+            {renderFixedCell(target, source, col.key, disabled)}
+          </div>
+        ))}
+
+        {columns.map((col) => (
+          <div key={col.id} role="cell">
+            {renderCustomCell(target, source, col, disabled)}
+          </div>
+        ))}
+      </>
+    );
+  }
+
   return (
     <div role="table" aria-rowcount={contacts.length}>
       <div ref={scrollRef} className="table-scroll">
@@ -239,17 +254,20 @@ export function ContactsTable({
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={columns.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
-              {columns.map((col) => (
-                <DraggableColumnHeader
-                  key={col.id}
-                  column={col}
-                  isSorted={sortKey === `custom:${col.id}`}
-                  sortDirection={sortOrder}
-                  onSort={() => onSort(`custom:${col.id}`)}
-                  filterValue={filters[`custom:${col.id}`] ?? ""}
-                  onFilterChange={(v) => onFilterChange(`custom:${col.id}`, v)}
-                />
-              ))}
+              {columns.map((col) => {
+                const key = customColumnKey(col.id);
+                return (
+                  <DraggableColumnHeader
+                    key={col.id}
+                    column={col}
+                    isSorted={sortKey === key}
+                    sortDirection={sortOrder}
+                    onSort={() => onSort(key)}
+                    filterValue={filters[key] ?? ""}
+                    onFilterChange={(v) => onFilterChange(key, v)}
+                  />
+                );
+              })}
             </SortableContext>
           </DndContext>
 
@@ -262,16 +280,7 @@ export function ContactsTable({
             className="ct-row ct-row-draft ct-row-draft-sticky"
             style={{ gridTemplateColumns, minWidth: rowMinWidth }}
           >
-            {FIXED_COLUMNS.map((col) => (
-              <div key={col.key} role="cell">
-                {renderFixedCell({ type: "draft" }, draft, col.key, draftSaving)}
-              </div>
-            ))}
-            {columns.map((col) => (
-              <div key={col.id} role="cell">
-                {renderCustomCell({ type: "draft" }, draft, col, draftSaving)}
-              </div>
-            ))}
+            {renderRow({ type: "draft" }, draft, draftSaving)}
             <div role="cell" className="ct-row-actions">
               <button type="button" className="ct-icon-btn" onClick={onCancelDraft} aria-label="Annuler la creation">
                 <X size={14} />
@@ -292,16 +301,7 @@ export function ContactsTable({
                 className="ct-row ct-row-virtual"
                 style={{ gridTemplateColumns, transform: `translateY(${virtualRow.start}px)` }}
               >
-                {FIXED_COLUMNS.map((col) => (
-                  <div key={col.key} role="cell">
-                    {renderFixedCell(target, contact, col.key)}
-                  </div>
-                ))}
-                {columns.map((col) => (
-                  <div key={col.id} role="cell">
-                    {renderCustomCell(target, contact, col)}
-                  </div>
-                ))}
+                {renderRow(target, contact)}
                 <div role="cell" className="ct-row-actions">
                   <button
                     type="button"

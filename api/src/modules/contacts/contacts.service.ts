@@ -22,10 +22,7 @@ export class ContactService {
     return this.prisma.contact.delete({ where: { id } });
   }
 
-  async findAll(
-    where?: Prisma.ContactWhereInput,
-    orderBy?: Prisma.ContactOrderByWithRelationInput,
-  ) {
-    return this.prisma.contact.findMany({ where, orderBy });
+  async findAll() {
+    return this.prisma.contact.findMany();
   }
 }

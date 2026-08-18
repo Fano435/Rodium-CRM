@@ -42,13 +42,7 @@ export function BulkImportPanel({ columns, onImport, onCancel, isSubmitting }: B
         <code>{`[{ "nom": "...", "telephone": "...", "customFields": { "3": "Rennes" } }]`}</code>
       </p>
 
-      <textarea
-        className="bip-textarea"
-        value={raw}
-        onChange={(e) => setRaw(e.target.value)}
-        placeholder='[{ "nom": "Jean Dupont", "telephone": "0600000000" }]'
-        rows={10}
-      />
+      <textarea className="bip-textarea" value={raw} onChange={(e) => setRaw(e.target.value)} rows={10} />
 
       {error && (
         <p className="bip-error" role="alert">

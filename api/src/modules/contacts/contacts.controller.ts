@@ -7,12 +7,10 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Query,
 } from '@nestjs/common';
 import { ContactService } from './contacts.service';
-import { CreateContactDto, UpdateContactDto } from './dto/create-contact.dto';
+import { CreateContactDto, UpdateContactDto } from './dto/contact.dto';
 import { Prisma } from '../../../generated/prisma/client';
-import { FindContactsDto } from './dto/find-contacts.dto';
 
 @Controller('contacts')
 export class ContactController {
@@ -31,17 +29,8 @@ export class ContactController {
   }
 
   @Get()
-  findAll(@Query() query: FindContactsDto) {
-    const where =
-      query.filterField && query.filterValue !== undefined
-        ? { [query.filterField]: query.filterValue }
-        : undefined;
-
-    const orderBy = query.sortBy
-      ? { [query.sortBy]: query.order ?? 'asc' }
-      : undefined;
-
-    return this.contactService.findAll(where, orderBy);
+  findAll() {
+    return this.contactService.findAll();
   }
 
   @Patch(':id')

@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { StatutContact, ColumnType } from "@generated/prisma/enums";
+import { normalizePhone, normalizeTitleCase } from "../utils/normalize";
+import { type ColumnKey, type FixedFieldKey, isCustomColumnKey, customColumnId } from "../types";
 import type { ContactColumn } from "../../../services/contactColumns.api";
 
 const baseContactSchema = z.object({
@@ -17,11 +19,13 @@ const baseContactSchema = z.object({
         return z.NEVER;
       }
     }),
+
   entreprise: z
     .string()
     .trim()
     .optional()
     .transform((v) => (v ? v : null)),
+
   score: z.number().int().min(0).default(0),
   statut: z.enum(StatutContact).default(StatutContact.PROSPECT),
 });
@@ -55,7 +59,7 @@ export function buildBulkImportSchema(columns: ContactColumn[]) {
   return z.array(buildContactSchema(columns)).min(1, "Le tableau est vide");
 }
 
-export function fieldSchemaFor(key: "nom" | "telephone" | "entreprise" | "score" | "statut") {
+export function fieldSchemaFor(key: FixedFieldKey) {
   return baseContactSchema.shape[key];
 }
 
@@ -63,26 +67,19 @@ export function customFieldSchemaFor(column: ContactColumn) {
   return zodForColumnType(column.type);
 }
 
-export const contactFormSchema = baseContactSchema;
-
-export type ContactFormInput = z.input<typeof contactFormSchema>;
-export type ContactFormValues = z.output<typeof contactFormSchema>;
-
-import type { FieldRef } from "../components/ContactsTable";
-import { normalizePhone, normalizeTitleCase } from "../utils/normalize";
-
 export function validateFieldValue(
-  field: FieldRef,
+  field: ColumnKey,
   columns: ContactColumn[],
   rawValue: string | number | null,
 ): string | number | null {
   try {
-    if (field.kind === "fixed") {
-      return fieldSchemaFor(field.key).parse(rawValue);
+    if (isCustomColumnKey(field)) {
+      const columnId = customColumnId(field);
+      const column = columns.find((c) => c.id === columnId);
+      if (!column) throw new Error("Colonne introuvable");
+      return customFieldSchemaFor(column).parse(rawValue);
     }
-    const column = columns.find((c) => c.id === field.columnId);
-    if (!column) throw new Error("Colonne introuvable");
-    return customFieldSchemaFor(column).parse(rawValue);
+    return fieldSchemaFor(field).parse(rawValue);
   } catch (e) {
     if (e instanceof z.ZodError) throw new Error(e.issues[0]?.message ?? "Valeur invalide");
     throw e;
